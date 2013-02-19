@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sws="http://www.springframework.org/schema/web-services"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/web-services http://www.springframework.org/schema/web-services/web-services-2.0.xsd">
+
+	<context:component-scan base-package="com.mycompany.hr" />
+
+	<sws:dynamic-wsdl id="holiday" portTypeName="HumanResource"
+		locationUri="/holidayService/" targetNamespace="http://mycompany.com/hr/definitions">
+		<sws:xsd location="/WEB-INF/xsd/hr.xsd" />
+	</sws:dynamic-wsdl>
+
+	<bean id="exceptionResolver"
+		class="org.springframework.ws.soap.server.endpoint.SoapFaultMappingExceptionResolver">
+		<property name="defaultFault" value="SERVER" />
+		<property name="exceptionMappings">
+			<value>
+				org.springframework.oxm.ValidationFailureException=CLIENT,Invalid
+				request
+			</value>
+		</property>
+	</bean>
+	<sws:interceptors>
+		<bean
+			class="org.springframework.ws.server.endpoint.interceptor.PayloadLoggingInterceptor" />
+
+		<bean id="wsSecurityInterceptor"
+			class="org.springframework.ws.soap.security.xwss.XwsSecurityInterceptor">
+			<property name="policyConfiguration" value="classpath:securityPolicy.xml" />
+			<property name="callbackHandlers">
+				<list>
+					<ref bean="keyStoreHandler" />
+					<ref bean="springSecurityCertificateHandler" />
+				</list>
+			</property>
+		</bean>
+	</sws:interceptors>
+
+	<bean id="springSecurityCertificateHandler"
+		class="org.springframework.ws.soap.security.xwss.callback.SpringCertificateValidationCallbackHandler">
+		<property name="authenticationManager" ref="authenticationManager" />
+	</bean>
+
+	<bean id="authenticationManager"
+		class="org.springframework.security.authentication.ProviderManager">
+		<property name="providers">
+			<bean
+				class="org.springframework.ws.soap.security.x509.X509AuthenticationProvider">
+				<property name="x509AuthoritiesPopulator">
+					<bean
+						class="org.springframework.ws.soap.security.x509.populator.DaoX509AuthoritiesPopulator">
+						<property name="userDetailsService" ref="userDetailsService" />
+					</bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="keyStoreHandler"
+		class="org.springframework.ws.soap.security.xwss.callback.KeyStoreCallbackHandler">
+		<property name="trustStore" ref="trustStore" />
+		<property name="keyStore" ref="keyStore" />
+		<property name="privateKeyPassword" value="ab987c" />
+	</bean>
+
+	<bean id="keyStore"
+		class="org.springframework.ws.soap.security.support.KeyStoreFactoryBean">
+		<property name="location" value="classpath:akulastore.jks" />
+		<property name="password" value="ab987c" />
+	</bean>
+
+	<bean id="trustStore"
+		class="org.springframework.ws.soap.security.support.KeyStoreFactoryBean">
+		<property name="location" value="classpath:truststore_server.jks" />
+		<property name="password" value="ab987c" />
+	</bean>
+
+	<sws:annotation-driven />
+
+</beans>
