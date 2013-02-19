@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xwss:SecurityConfiguration xmlns:xwss="http://java.sun.com/xml/ns/xwss/config">
+<!-- All requests need to be signed -->
+	<xwss:Sign includeTimestamp="false">
+		<xwss:X509Token certificateAlias="signFiles" />
+	</xwss:Sign>
+
+	<!-- All requests to be encrypted using server's public key -->
+	<xwss:Encrypt>
+		<xwss:X509Token certificateAlias="signFiles" />
+	</xwss:Encrypt>
+
+	<!-- All response messages from the server are required to be encrypted -->
+	<xwss:RequireEncryption />
+
+	<!-- All response messages from the server are required to have a signature associated with them -->
+	<xwss:RequireSignature requireTimestamp="false" />
+</xwss:SecurityConfiguration>
